@@ -16,7 +16,7 @@ workspace = true
 
 [features]
 native-tls = ["dep:native-tls", "tokio-tungstenite/native-tls"]
-rustls = ["dep:rustls", "dep:rustls-pemfile", "dep:aws-lc-rs", "tokio-tungstenite/rustls-tls-webpki-roots"]
+rustls = ["dep:rustls", "dep:rustls-pemfile",  "tokio-tungstenite/rustls-tls-webpki-roots"]
 
 [dependencies]
 chia-sdk-types = { workspace = true }
@@ -39,4 +39,4 @@ once_cell = { workspace = true }
 #aws-lc-rs = { version = "1", features = ["bindgen"], optional = true }
 
 [package.metadata.cargo-machete]
-ignored = ["aws-lc-rs"]
+ignored = []
