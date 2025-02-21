@@ -1,5 +1,5 @@
 use bigdecimal::{BigDecimal, RoundingMode, ToPrimitive};
-use chia_protocol::{Bytes32, Coin};
+use chia_protocol::{Bytes, Bytes32, Coin};
 use chia_puzzles::{
     nft::{NftOwnershipLayerSolution, NftStateLayerSolution},
     offer::{NotarizedPayment, SettlementPaymentsSolution, SETTLEMENT_PAYMENTS_PUZZLE_HASH},
@@ -7,7 +7,7 @@ use chia_puzzles::{
     LineageProof, Proof,
 };
 use chia_sdk_types::{
-    run_puzzle, Condition, Conditions, NewMetadataOutput, TradePrice, TransferNft,
+    run_puzzle, Condition, Conditions, Memos, NewMetadataOutput, TradePrice, TransferNft,
 };
 use clvm_traits::{clvm_list, FromClvm, ToClvm};
 use clvm_utils::{tree_hash, ToTreeHash};
@@ -197,17 +197,24 @@ where
         inner: &I,
         p2_puzzle_hash: Bytes32,
         extra_conditions: Conditions,
+        memos: Option<Vec<Bytes>>,
     ) -> Result<Nft<M>, DriverError>
     where
         M: ToTreeHash,
         I: SpendWithConditions,
     {
-        let memos = ctx.hint(p2_puzzle_hash)?;
+        let mut memos_vec = vec![Bytes::new(p2_puzzle_hash.to_bytes().to_vec())];
+
+        if let Some(memos) = memos {
+            memos_vec.extend(memos);
+        }
+
+        let output_memos = Memos::some(ctx.alloc(&memos_vec)?);
 
         self.spend_with(
             ctx,
             inner,
-            extra_conditions.create_coin(p2_puzzle_hash, self.coin.amount, Some(memos)),
+            extra_conditions.create_coin(p2_puzzle_hash, self.coin.amount, output_memos),
         )?;
 
         let metadata = self.info.metadata.clone();
@@ -526,7 +533,7 @@ mod tests {
             .create(ctx)?
             .mint_nft(ctx, mint)?;
         let _did = did.update(ctx, &p2, mint_nft)?;
-        let _nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new())?;
+        let _nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new(), None,)?;
 
         sim.spend_coins(ctx.take(), &[sk])?;
 
@@ -621,7 +628,7 @@ mod tests {
         );
 
         let child_nft = nft.clone();
-        let _nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new())?;
+        let _nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new(), None)?;
 
         sim.spend_coins(ctx.take(), &[sk])?;
 
@@ -679,7 +686,7 @@ mod tests {
         let _did = did.update(ctx, &p2, mint_nft)?;
 
         let parent_coin = nft.coin;
-        let expected_nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new())?;
+        let expected_nft = nft.transfer(ctx, &p2, puzzle_hash, Conditions::new(), None)?;
 
         sim.spend_coins(ctx.take(), &[sk])?;
 
