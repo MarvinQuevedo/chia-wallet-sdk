@@ -8,6 +8,7 @@ pub use clvm_utils::{
 };
 pub use clvmr::{Allocator, Atom, NodePtr, SExp};
 
+#[cfg(feature = "peer-client")]
 pub use chia_sdk_client::{Peer, PeerOptions};
 pub use chia_sdk_coinset::*;
 pub use chia_sdk_driver::{
@@ -22,6 +23,7 @@ pub use chia_sdk_driver::{
 pub use chia_sdk_signer::{
     AggSigConstants, RequiredBlsSignature, RequiredSecpSignature, RequiredSignature,
 };
+#[cfg(feature = "peer-client")]
 pub use chia_sdk_test::{
     BlsPair, BlsPairWithCoin, K1Pair, R1Pair, Simulator, SimulatorConfig, SimulatorError,
 };

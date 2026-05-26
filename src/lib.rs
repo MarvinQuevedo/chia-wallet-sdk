@@ -3,10 +3,12 @@
 
 pub mod prelude;
 
+#[cfg(feature = "peer-client")]
 pub use chia_sdk_client as client;
 pub use chia_sdk_coinset as coinset;
 pub use chia_sdk_driver as driver;
 pub use chia_sdk_signer as signer;
+#[cfg(feature = "peer-client")]
 pub use chia_sdk_test as test;
 pub use chia_sdk_types as types;
 pub use chia_sdk_utils as utils;
@@ -24,6 +26,7 @@ pub mod chia {
     pub use chia_secp as secp;
     pub use chia_serde as serde;
     pub use chia_sha2 as sha2;
+    #[cfg(feature = "peer-client")]
     pub use chia_ssl as ssl;
     pub use chia_traits as traits;
 }

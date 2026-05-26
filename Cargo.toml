@@ -70,18 +70,32 @@ format_push_string = "allow"
 workspace = true
 
 [features]
+# `peer-client` enables the P2P wallet protocol client (chia-sdk-client,
+# chia-sdk-test, chia-ssl). Required for desktop/mobile builds that connect
+# to Chia full nodes directly. WASM builds omit this feature — they use
+# the HTTP RPC backend (chia-sdk-coinset) instead, since browsers can't
+# speak the P2P TLS protocol with self-signed peer certs.
+default = ["peer-client"]
+peer-client = [
+    "dep:chia-sdk-client",
+    "dep:chia-sdk-test",
+    "dep:chia-ssl",
+]
+
 chip-0035 = ["chia-sdk-driver/chip-0035", "chia-sdk-types/chip-0035"]
 offer-compression = ["chia-sdk-driver/offer-compression"]
-native-tls = ["chia-sdk-client/native-tls", "chia-sdk-coinset/native-tls"]
-rustls = ["chia-sdk-client/rustls", "chia-sdk-coinset/rustls"]
-peer-simulator = ["chia-sdk-test/peer-simulator"]
+# TLS features apply only when `peer-client` is on; the `?` syntax means
+# "only forward this feature if the optional dep is enabled".
+native-tls = ["chia-sdk-client?/native-tls", "chia-sdk-coinset/native-tls"]
+rustls = ["chia-sdk-client?/rustls", "chia-sdk-coinset/rustls"]
+peer-simulator = ["chia-sdk-test?/peer-simulator"]
 action-layer = ["chia-sdk-types/action-layer", "chia-sdk-driver/action-layer"]
 
 [dependencies]
-chia-sdk-client = { workspace = true }
+chia-sdk-client = { workspace = true, optional = true }
 chia-sdk-driver = { workspace = true }
 chia-sdk-signer = { workspace = true }
-chia-sdk-test = { workspace = true, features = ["serde"] }
+chia-sdk-test = { workspace = true, features = ["serde"], optional = true }
 chia-sdk-types = { workspace = true }
 chia-sdk-utils = { workspace = true }
 chia-sdk-coinset = { workspace = true }
@@ -92,12 +106,19 @@ chia-traits = { workspace = true }
 chia-sha2 = { workspace = true }
 chia-consensus = { workspace = true }
 chia-puzzle-types = { workspace = true }
-chia-ssl = { workspace = true }
+chia-ssl = { workspace = true, optional = true }
 chia-serde = { workspace = true }
 clvm-traits = { workspace = true, features = ["derive", "chia-bls", "chia-secp"] }
 clvm-utils = { workspace = true }
 clvmr = { workspace = true }
 chia-puzzles = { workspace = true }
+
+# On wasm32-unknown-unknown, force getrandom (both versions used transitively)
+# to enable their JS-backed RNG features. Browser builds also need
+# `--cfg getrandom_backend="wasm_js"` (set in `.cargo/config.toml`).
+[target.'cfg(target_arch = "wasm32")'.dependencies]
+getrandom = { workspace = true, features = ["wasm_js"] }
+getrandom_02 = { package = "getrandom", version = "0.2", features = ["js"] }
 
 [dev-dependencies]
 anyhow = { workspace = true }
